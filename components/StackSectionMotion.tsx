@@ -42,7 +42,13 @@ export function StackSectionMotion() {
         if (!container) return;
 
         Array.from(container.children).forEach((child, index) => {
-          if (child instanceof HTMLElement) items.push({ element: child, index, type, variant });
+          if (child instanceof HTMLElement) {
+            child.style.opacity = '';
+            child.style.filter = '';
+            child.style.visibility = '';
+            child.style.willChange = 'auto';
+            items.push({ element: child, index, type, variant });
+          }
         });
       });
 
@@ -60,33 +66,24 @@ export function StackSectionMotion() {
       const itemProgress = smoothstep(rawProgress);
       const impactProgress = clamp(easeOutBack(rawProgress));
       const fastProgress = itemProgress;
-      const clarityProgress = smoothstep(clamp(rawProgress * 1.25));
       const remaining = 1 - itemProgress;
       const impactRemaining = remaining;
       const fastRemaining = 1 - fastProgress;
-      const clarityRemaining = 1 - clarityProgress;
+      const isActive = rawProgress > 0.001 && rawProgress < 0.999;
 
-      element.style.opacity = (0.04 + clarityProgress * 0.96).toFixed(3);
+      element.style.willChange = isActive ? 'transform' : 'auto';
       element.style.clipPath = '';
       element.style.transformOrigin = '';
-      element.style.filter = `blur(${(clarityRemaining * 2.4).toFixed(2)}px) saturate(${(
-        0.86 +
-        clarityProgress * 0.14
-      ).toFixed(3)})`;
 
       if (type === 'split') {
         const direction = index === 0 ? -1 : 1;
         const scale = 0.84 + impactProgress * 0.16;
-        element.style.filter = `blur(${(clarityRemaining * 2.8).toFixed(2)}px) saturate(${(
-          0.84 +
-          clarityProgress * 0.16
-        ).toFixed(3)})`;
         element.style.transform = `translate3d(${(direction * impactRemaining * 360).toFixed(
           2
         )}px, ${(fastRemaining * 50).toFixed(2)}px, 0) rotateY(${(
           direction *
           fastRemaining *
-          -12
+          -6
         ).toFixed(2)}deg) scale(${scale.toFixed(4)})`;
         return;
       }
@@ -97,16 +94,12 @@ export function StackSectionMotion() {
         if (variant === 'fan') {
           const scale = 0.88 + impactProgress * 0.12;
           element.style.transformOrigin = `${index % 2 === 0 ? 0 : 100}% 120%`;
-          element.style.filter = `blur(${(clarityRemaining * 2).toFixed(2)}px) saturate(${(
-            0.88 +
-            clarityProgress * 0.12
-          ).toFixed(3)})`;
           element.style.transform = `translate3d(${(direction * impactRemaining * 240).toFixed(
             2
           )}px, ${(fastRemaining * 88).toFixed(2)}px, 0) rotate(${(
             direction *
             impactRemaining *
-            20
+            10
           ).toFixed(2)}deg) scale(${scale.toFixed(4)})`;
           return;
         }
@@ -114,24 +107,19 @@ export function StackSectionMotion() {
         if (variant === 'tilt') {
           const scale = 0.72 + impactProgress * 0.28;
           element.style.transformOrigin = '50% 100%';
-          element.style.filter = `blur(${(clarityRemaining * 2.4).toFixed(2)}px) saturate(${(
-            0.84 +
-            clarityProgress * 0.16
-          ).toFixed(3)})`;
           element.style.transform = `perspective(900px) translate3d(${(
             direction *
             impactRemaining *
             88
           ).toFixed(2)}px, ${(fastRemaining * 180).toFixed(2)}px, 0) rotateX(${(
-            fastRemaining * 38
-          ).toFixed(2)}deg) rotateZ(${(direction * impactRemaining * 6).toFixed(
+            fastRemaining * 19
+          ).toFixed(2)}deg) rotateZ(${(direction * impactRemaining * 3).toFixed(
             2
           )}deg) scale(${scale.toFixed(4)})`;
           return;
         }
 
         if (variant === 'steps') {
-          element.style.opacity = (0.08 + clarityProgress * 0.92).toFixed(3);
           element.style.clipPath = `inset(0 ${(fastRemaining * 100).toFixed(
             2
           )}% 0 0 round ${(fastRemaining * 18).toFixed(2)}px)`;
@@ -150,16 +138,12 @@ export function StackSectionMotion() {
         if (variant === 'weave') {
           const rowDirection = index < 3 ? -1 : 1;
           const scale = 0.86 + impactProgress * 0.14;
-          element.style.filter = `blur(${(clarityRemaining * 2.2).toFixed(2)}px) saturate(${(
-            0.86 +
-            clarityProgress * 0.14
-          ).toFixed(3)})`;
           element.style.transform = `translate3d(${(direction * impactRemaining * 280).toFixed(
             2
           )}px, ${(rowDirection * impactRemaining * 92).toFixed(2)}px, 0) rotate(${(
             direction *
             impactRemaining *
-            10
+            5
           ).toFixed(2)}deg) scale(${scale.toFixed(4)})`;
           return;
         }
@@ -169,10 +153,6 @@ export function StackSectionMotion() {
           const rowDirection = index < 2 ? -1 : 1;
           const scale = 0.62 + impactProgress * 0.38;
           element.style.transformOrigin = '50% 50%';
-          element.style.filter = `blur(${(clarityRemaining * 3).toFixed(2)}px) saturate(${(
-            0.82 +
-            clarityProgress * 0.18
-          ).toFixed(3)})`;
           element.style.transform = `translate3d(${(
             columnDirection *
             impactRemaining *
@@ -182,7 +162,7 @@ export function StackSectionMotion() {
           )}px, 0) rotate(${(
             columnDirection *
             impactRemaining *
-            15
+            7.5
           ).toFixed(2)}deg) scale(${scale.toFixed(4)})`;
           return;
         }
@@ -190,17 +170,13 @@ export function StackSectionMotion() {
         if (variant === 'split') {
           const columnDirection = index === 0 ? -1 : 1;
           const scale = 0.84 + impactProgress * 0.16;
-          element.style.filter = `blur(${(clarityRemaining * 2.6).toFixed(2)}px) saturate(${(
-            0.84 +
-            clarityProgress * 0.16
-          ).toFixed(3)})`;
           element.style.transform = `translate3d(${(
             columnDirection *
             impactRemaining *
             370
           ).toFixed(2)}px, ${(fastRemaining * 56).toFixed(
             2
-          )}px, 0) rotateY(${(columnDirection * fastRemaining * -13).toFixed(
+          )}px, 0) rotateY(${(columnDirection * fastRemaining * -6.5).toFixed(
             2
           )}deg) scale(${scale.toFixed(4)})`;
           return;
@@ -226,7 +202,6 @@ export function StackSectionMotion() {
       }
 
       if (variant === 'steps') {
-        element.style.opacity = (0.08 + clarityProgress * 0.92).toFixed(3);
         element.style.clipPath = `inset(0 ${(fastRemaining * 100).toFixed(
           2
         )}% 0 0 round ${(fastRemaining * 14).toFixed(2)}px)`;
@@ -242,14 +217,14 @@ export function StackSectionMotion() {
         const scale = 0.82 + impactProgress * 0.18;
         element.style.transform = `translate3d(0, ${(fastRemaining * 150).toFixed(
           2
-        )}px, 0) rotateX(${(fastRemaining * 10).toFixed(2)}deg) scale(${scale.toFixed(4)})`;
+        )}px, 0) rotateX(${(fastRemaining * 5).toFixed(2)}deg) scale(${scale.toFixed(4)})`;
         return;
       }
 
       if (variant === 'tilt') {
         element.style.transform = `translate3d(0, ${(fastRemaining * 150).toFixed(
           2
-        )}px, 0) rotateX(${(fastRemaining * 18).toFixed(2)}deg)`;
+        )}px, 0) rotateX(${(fastRemaining * 9).toFixed(2)}deg)`;
         return;
       }
 
@@ -258,7 +233,7 @@ export function StackSectionMotion() {
           2
         )}px, ${(fastRemaining * 98).toFixed(
           2
-        )}px, 0) rotate(${(fastRemaining * -3).toFixed(2)}deg)`;
+        )}px, 0) rotate(${(fastRemaining * -1.5).toFixed(2)}deg)`;
         return;
       }
 

@@ -212,8 +212,8 @@ export function HeroSection() {
           ref={leftPanelRef}
           className="hero-split-side hero-split-left flex w-full max-w-[560px] flex-col items-start 2xl:max-w-[680px]"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-honey/30 bg-honey/10 px-4 py-1.5 text-[12px] font-semibold tracking-wider text-honey-deep">
-            <span className="hex-clip h-2.5 w-2.5 bg-honey" />
+          <span className="section-kicker">
+            <span className="section-kicker-dot" />
             {t('eyebrow')}
           </span>
 

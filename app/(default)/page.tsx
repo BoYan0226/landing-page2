@@ -13,7 +13,6 @@ import { FinalCtaSection } from '@/components/sections/FinalCtaSection';
 import { LandingFooter } from '@/components/LandingFooter';
 import { ScrollPathTransition } from '@/components/ScrollPathTransition';
 import { SectionInertiaSnap } from '@/components/SectionInertiaSnap';
-import { SectionScrollFade } from '@/components/SectionScrollFade';
 import { StackSectionMotion } from '@/components/StackSectionMotion';
 import { StackJumpNav } from '@/components/StackJumpNav';
 import { WaveGridBackground } from '@/components/WaveGridBackground';
@@ -124,7 +123,6 @@ export default function HomePage() {
       <LandingNav />
       <ScrollPathTransition />
       <SectionInertiaSnap />
-      <SectionScrollFade />
       <StackSectionMotion />
       <StackJumpNav items={STACK_NAV_ITEMS_CN} />
       <div id="stack-home" className="stack-anchor" />

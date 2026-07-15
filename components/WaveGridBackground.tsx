@@ -8,11 +8,18 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 
 const MAX_TRAIL = 128;
+const CONTENT_FRAME_INTERVAL = 1000 / 20;
+const CONTENT_PIXEL_RATIO = 0.3;
+const CONTENT_BLUR_RADIUS = 12;
+const HERO_PIXEL_RATIO = 1.35;
+const HERO_RGB_SHIFT = 0.004;
 
 const VIGNETTE_RGB_SHIFT_SHADER = {
   uniforms: {
     tDiffuse: { value: null },
-    shiftAmount: { value: 0.004 },
+    blurAmount: { value: 0 },
+    shiftAmount: { value: HERO_RGB_SHIFT },
+    texelSize: { value: new THREE.Vector2(1, 1) },
     vignetteRadius: { value: 0.3 },
     vignetteSoftness: { value: 0.3 },
   },
@@ -26,7 +33,9 @@ const VIGNETTE_RGB_SHIFT_SHADER = {
   `,
   fragmentShader: `
     uniform sampler2D tDiffuse;
+    uniform float blurAmount;
     uniform float shiftAmount;
+    uniform vec2 texelSize;
     uniform float vignetteRadius;
     uniform float vignetteSoftness;
     varying vec2 vUv;
@@ -39,12 +48,32 @@ const VIGNETTE_RGB_SHIFT_SHADER = {
       float vignetteFactor = smoothstep(vignetteRadius, vignetteRadius + vignetteSoftness, dist);
       float currentShift = shiftAmount * vignetteFactor;
 
-      float r = texture2D(tDiffuse, vUv + vec2(currentShift * horzQuadrant, currentShift * vertQuadrant)).r;
-      float g = texture2D(tDiffuse, vUv).g;
-      float b = texture2D(tDiffuse, vUv - vec2(currentShift * horzQuadrant, currentShift * vertQuadrant)).b;
+      vec3 shiftedColor;
+      if (blurAmount > 0.0) {
+        vec2 farOffset = texelSize * blurAmount;
+        vec2 nearOffset = farOffset * 0.45;
+        shiftedColor = texture2D(tDiffuse, vUv).rgb * 0.16;
+        shiftedColor += texture2D(tDiffuse, vUv + vec2(nearOffset.x, 0.0)).rgb * 0.08;
+        shiftedColor += texture2D(tDiffuse, vUv - vec2(nearOffset.x, 0.0)).rgb * 0.08;
+        shiftedColor += texture2D(tDiffuse, vUv + vec2(0.0, nearOffset.y)).rgb * 0.08;
+        shiftedColor += texture2D(tDiffuse, vUv - vec2(0.0, nearOffset.y)).rgb * 0.08;
+        shiftedColor += texture2D(tDiffuse, vUv + vec2(farOffset.x, 0.0)).rgb * 0.05;
+        shiftedColor += texture2D(tDiffuse, vUv - vec2(farOffset.x, 0.0)).rgb * 0.05;
+        shiftedColor += texture2D(tDiffuse, vUv + vec2(0.0, farOffset.y)).rgb * 0.05;
+        shiftedColor += texture2D(tDiffuse, vUv - vec2(0.0, farOffset.y)).rgb * 0.05;
+        shiftedColor += texture2D(tDiffuse, vUv + farOffset).rgb * 0.08;
+        shiftedColor += texture2D(tDiffuse, vUv - farOffset).rgb * 0.08;
+        shiftedColor += texture2D(tDiffuse, vUv + vec2(farOffset.x, -farOffset.y)).rgb * 0.08;
+        shiftedColor += texture2D(tDiffuse, vUv + vec2(-farOffset.x, farOffset.y)).rgb * 0.08;
+      } else {
+        float r = texture2D(tDiffuse, vUv + vec2(currentShift * horzQuadrant, currentShift * vertQuadrant)).r;
+        float g = texture2D(tDiffuse, vUv).g;
+        float b = texture2D(tDiffuse, vUv - vec2(currentShift * horzQuadrant, currentShift * vertQuadrant)).b;
+        shiftedColor = vec3(r, g, b);
+      }
       float darken = 1.0 - vignetteFactor * 0.34;
 
-      gl_FragColor = vec4(vec3(r, g, b) * darken, 1.0);
+      gl_FragColor = vec4(shiftedColor * darken, 1.0);
     }
   `,
 };
@@ -283,6 +312,13 @@ export function WaveGridBackground() {
     let timeSinceLastMove = 3;
     let isPlacingRandomPoints = true;
     let isVisible = document.visibilityState === 'visible';
+    const scrollRoot = document.querySelector<HTMLElement>('[data-landing-scroll-root]');
+    let isContentMode = Boolean(
+      scrollRoot && scrollRoot.scrollTop >= scrollRoot.clientHeight * 0.95
+    );
+    canvas.classList.toggle('wave-grid-background--content', isContentMode);
+    rgbShiftPass.uniforms.blurAmount.value = isContentMode ? CONTENT_BLUR_RADIUS : 0;
+    rgbShiftPass.uniforms.shiftAmount.value = isContentMode ? 0 : HERO_RGB_SHIFT;
 
     const addTrailPoint = (x: number, z: number, distDelta: number) => {
       if (trail.length >= MAX_TRAIL) trail.shift();
@@ -300,13 +336,34 @@ export function WaveGridBackground() {
     const setSize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      const pixelRatio = Math.min(window.devicePixelRatio, 1.35);
+      const pixelRatio = Math.min(
+        window.devicePixelRatio,
+        isContentMode ? CONTENT_PIXEL_RATIO : HERO_PIXEL_RATIO
+      );
       renderer.setSize(width, height);
       renderer.setPixelRatio(pixelRatio);
       composer.setSize(width, height);
       composer.setPixelRatio(pixelRatio);
+      rgbShiftPass.uniforms.texelSize.value.set(
+        1 / Math.max(1, width * pixelRatio),
+        1 / Math.max(1, height * pixelRatio)
+      );
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+    };
+
+    const updateRenderMode = () => {
+      if (!scrollRoot) return;
+
+      const nextContentMode = scrollRoot.scrollTop >= scrollRoot.clientHeight * 0.95;
+      if (nextContentMode === isContentMode) return;
+
+      isContentMode = nextContentMode;
+      canvas.classList.toggle('wave-grid-background--content', isContentMode);
+      rgbShiftPass.uniforms.blurAmount.value = isContentMode ? CONTENT_BLUR_RADIUS : 0;
+      rgbShiftPass.uniforms.shiftAmount.value = isContentMode ? 0 : HERO_RGB_SHIFT;
+      lastTime = performance.now();
+      setSize();
     };
 
     const updateCamera = () => {
@@ -382,6 +439,11 @@ export function WaveGridBackground() {
 
     const tick = (now: number) => {
       try {
+        if (isVisible && isContentMode && now - lastTime < CONTENT_FRAME_INTERVAL) {
+          animationFrame = window.requestAnimationFrame(tick);
+          return;
+        }
+
         const delta = Math.min((now - lastTime) / 1000, 0.05);
         lastTime = now;
         if (isVisible) {
@@ -405,6 +467,7 @@ export function WaveGridBackground() {
     window.addEventListener('resize', setSize);
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     document.addEventListener('visibilitychange', onVisibilityChange);
+    scrollRoot?.addEventListener('scroll', updateRenderMode, { passive: true });
     animationFrame = window.requestAnimationFrame(tick);
 
     return () => {
@@ -412,6 +475,8 @@ export function WaveGridBackground() {
       window.removeEventListener('resize', setSize);
       window.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      scrollRoot?.removeEventListener('scroll', updateRenderMode);
+      canvas.classList.remove('wave-grid-background--content');
       composer.dispose();
       renderer.dispose();
       geometry.dispose();

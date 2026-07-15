@@ -25,8 +25,8 @@ export function InfraSection() {
       <div className="relative z-10 mx-auto max-w-[1240px] 2xl:max-w-[1440px] px-6">
         {/* Header */}
         <div className="flex flex-col items-center text-center" data-motion="header">
-          <span className="inline-flex items-center gap-2 rounded-full border border-honey/30 bg-honey/10 px-4 py-1.5 text-[12px] font-semibold tracking-wider text-honey-deep">
-            <span className="hex-clip h-2.5 w-2.5 bg-honey" />
+          <span className="section-kicker">
+            <span className="section-kicker-dot" />
             {t('eyebrow')}
           </span>
           <h2 className="mt-5 text-[26px] font-semibold leading-[1.18] text-ink sm:text-[40px] sm:leading-[1.14] md:text-[50px] 2xl:text-[58px]">

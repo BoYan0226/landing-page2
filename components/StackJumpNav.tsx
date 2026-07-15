@@ -192,7 +192,6 @@ export function StackJumpNav({ items }: StackJumpNavProps) {
         const shift = 0.55 + 3.7 * Math.exp(-distance * 0.42);
         const opacity = Math.max(0.2, 1 - distance * 0.14);
         const scale = Math.max(0.74, 1 - distance * 0.055);
-        const blur = Math.min(0.36, distance * 0.06);
 
         return (
           <button
@@ -210,16 +209,7 @@ export function StackJumpNav({ items }: StackJumpNavProps) {
                   2
                 )}rem * var(--stack-label-size-factor, 1))`,
                 '--stack-label-opacity': opacity.toFixed(2),
-                '--stack-label-font-size': `clamp(calc(${(0.94 * scale).toFixed(
-                  3
-                )}rem * var(--stack-label-size-factor, 1)), calc((${(0.83 * scale).toFixed(
-                  3
-                )}rem + ${(0.44 * scale).toFixed(
-                  3
-                )}vw) * var(--stack-label-size-factor, 1)), calc(${(1.24 * scale).toFixed(
-                  3
-                )}rem * var(--stack-label-size-factor, 1)))`,
-                '--stack-label-blur': `${blur.toFixed(2)}px`,
+                '--stack-label-scale': scale.toFixed(3),
               } as CSSProperties
             }
             onClick={() => handleJump(item.id)}
