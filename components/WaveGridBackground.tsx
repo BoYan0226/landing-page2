@@ -120,6 +120,7 @@ export function WaveGridBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
 
+    try {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#f7f4e9');
 
@@ -380,14 +381,18 @@ export function WaveGridBackground() {
     };
 
     const tick = (now: number) => {
-      const delta = Math.min((now - lastTime) / 1000, 0.05);
-      lastTime = now;
-      if (isVisible) {
-        updateCamera();
-        updateTrail(delta);
-        composer.render();
+      try {
+        const delta = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+        if (isVisible) {
+          updateCamera();
+          updateTrail(delta);
+          composer.render();
+        }
+        animationFrame = window.requestAnimationFrame(tick);
+      } catch (error) {
+        console.warn('Wave grid background disabled after a render error.', error);
       }
-      animationFrame = window.requestAnimationFrame(tick);
     };
 
     const onVisibilityChange = () => {
@@ -414,6 +419,10 @@ export function WaveGridBackground() {
       depthMaterial.dispose();
       trailTexture.dispose();
     };
+    } catch (error) {
+      console.warn('Wave grid background disabled.', error);
+      return undefined;
+    }
   }, []);
 
   return <canvas ref={canvasRef} aria-hidden className="wave-grid-background" />;
