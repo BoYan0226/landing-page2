@@ -1,0 +1,617 @@
+@import 'tailwindcss';
+
+/**
+ * Landing design system (2026 redesign — standalone HTML design source).
+ *
+ * Tokens mirror the design's CSS custom properties exactly so every
+ * section uses semantic Tailwind utilities (bg-paper, text-ink,
+ * text-honey, bg-night, font-display, …) instead of scattering raw hex
+ * per component. Fonts are wired in app/layout.tsx via next/font
+ * (Space Grotesk) + a Google Fonts link (Noto Sans SC); the variables
+ * they expose feed --font-display / --font-sans below.
+ */
+@theme {
+  /* Surfaces */
+  --color-paper: #fbf7ee; /* cream page / light sections */
+  --color-page-soft: #fbfaf7; /* warm white for the stacked content pages */
+  --color-card: #fffcf5; /* card surface on cream */
+  --color-night: #181309; /* dark sections */
+  --color-night-2: #2c2410; /* dark gradient stop */
+  --color-night-3: #3a2400; /* dark gradient stop (warmer) */
+
+  /* Ink + brand — aligned to webapp / agent-webapp brand tokens so the
+     landing reads as the same product (brand yellow #f1d422, not the
+     design source's amber). Reserved for fills/accents; readable text on
+     cream uses the deep mustard variant (the product's eyebrow color). */
+  --color-ink: #221c13; /* primary text (warm near-black) */
+  --color-honey: #F1D422; /* = webapp --color-brand */
+  --color-honey-soft: #e5c81e; /* = webapp --color-brand-hover */
+  --color-honey-deep: #8a6f00; /* = webapp eyebrow text on yellow tint */
+
+  /* Hairlines */
+  --color-line: rgba(34, 28, 19, 0.12);
+  --color-line-dark: rgba(255, 255, 255, 0.1);
+
+  /* Type */
+  --font-sans: 'Noto Sans SC', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-display: var(--font-space-grotesk), 'Noto Sans SC', sans-serif;
+}
+
+:root {
+  --r: 18px; /* card radius */
+  --maxw: 1240px; /* content container */
+  --hex: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #f7f4e9;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+[data-landing-scroll-root] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-landing-scroll-root] {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  scroll-behavior: auto;
+  scroll-padding-top: 4rem;
+  scroll-snap-type: none;
+}
+
+.wave-grid-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+[data-landing-scroll-root] > section,
+[data-landing-scroll-root] > .sticky-flow {
+  position: relative;
+  z-index: 1;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+[data-landing-scroll-root]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Codrops-style sticky stack starts after the opening screen. */
+.sticky-flow {
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(18px) saturate(118%);
+  backdrop-filter: blur(18px) saturate(118%);
+}
+
+.sticky-flow::after {
+  content: '';
+  display: block;
+  height: 0;
+}
+
+.sticky-panel {
+  position: relative;
+  top: auto;
+  z-index: 1;
+  scroll-margin-top: 4rem;
+}
+
+.sticky-panel--light::before {
+  display: none;
+}
+
+.glass-surface {
+  background: rgba(255, 253, 247, 0.58) !important;
+  border-color: rgba(255, 255, 255, 0.52) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    0 18px 54px rgba(34, 28, 19, 0.1) !important;
+}
+
+.glass-surface-soft {
+  background: rgba(255, 253, 247, 0.38) !important;
+  border-color: rgba(255, 255, 255, 0.44) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
+  backdrop-filter: blur(16px) saturate(135%);
+}
+
+.phone-solid {
+  background: #fffdf7;
+  border-color: rgba(26, 26, 26, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 28px 68px rgba(34, 28, 19, 0.22);
+}
+
+.title-honey-shadow {
+  text-shadow: none;
+}
+
+.stack-jump-nav {
+  position: fixed;
+  --stack-label-size-factor: 1;
+  --stack-label-left: clamp(0.8rem, 2.2vw, 2rem);
+  left: -10px;
+  top: 50%;
+  z-index: 90;
+  height: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stack-jump-label {
+  position: absolute;
+  left: var(--stack-label-left);
+  top: 0;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  padding: 0.36rem 0;
+  min-width: 8.5rem;
+  color: rgba(32, 33, 36, 0.74);
+  font: inherit;
+  font-size: var(--stack-label-font-size, clamp(0.52rem, 0.48rem + 0.3vw, 0.82rem));
+  font-weight: 300;
+  letter-spacing: 0.075em;
+  line-height: 1;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: var(--stack-label-opacity, 1);
+  transform: translate(
+    var(--stack-label-shift, 0rem),
+    calc(var(--stack-label-y, 0rem) - 50%)
+  );
+  transform-origin: right center;
+  backface-visibility: hidden;
+  filter: blur(var(--stack-label-blur, 0px));
+  will-change: transform, opacity, filter;
+  transition:
+    color 220ms ease,
+    filter 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    font-size 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 460ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 600ms cubic-bezier(0.32, 0, 0.18, 1);
+}
+
+.stack-jump-nav[data-visible='false'] .stack-jump-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stack-jump-nav[data-visible='true'] {
+  opacity: 1;
+  transition: opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1) 260ms;
+}
+
+.stack-jump-nav[data-visible='true'] .stack-jump-label {
+  opacity: var(--stack-label-opacity, 1);
+}
+
+.stack-jump-nav[data-phase='summary'] {
+  z-index: 180;
+  opacity: 1;
+  transition: none;
+}
+
+.stack-jump-nav[data-phase='summary'] .stack-jump-label {
+  color: rgba(32, 33, 36, 0.54);
+  opacity: var(--stack-label-opacity, 1);
+  pointer-events: auto;
+}
+
+.stack-jump-nav[data-phase='summary'] .stack-jump-label:hover,
+.stack-jump-nav[data-phase='summary'] .stack-jump-label[data-active='true'] {
+  color: rgba(32, 33, 36, 0.76);
+}
+
+.stack-jump-label:hover {
+  color: rgba(32, 33, 36, 0.92);
+}
+
+.sticky-panel--summary {
+  background: transparent;
+  z-index: 1 !important;
+}
+
+.summary-screen {
+  position: relative;
+  z-index: 1;
+}
+
+.stack-jump-label[data-active='true'] {
+  color: rgba(32, 33, 36, 0.76);
+  filter: blur(0);
+  font-weight: 400;
+  text-shadow: 0 3px 9px rgba(32, 33, 36, 0.12);
+}
+
+@media (max-width: 1800px) {
+  .stack-jump-nav {
+    --stack-label-size-factor: 0.9;
+    --stack-label-left: 0px;
+    left: -20px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .stack-jump-nav {
+    --stack-label-size-factor: 0.9;
+    --stack-label-left: 0px;
+    left: -20px;
+  }
+}
+
+.stack-jump-indicator {
+  display: none;
+}
+
+.stack-anchor {
+  height: 0;
+  scroll-margin-top: 0;
+}
+
+.sticky-panel > section {
+  --section-content-scale: 1;
+  box-shadow: none !important;
+  filter: none !important;
+  min-height: 100vh;
+  scroll-snap-align: none;
+}
+
+[data-scroll-fade-section] > section > :not([aria-hidden='true']),
+[data-scroll-fade-section] .summary-screen > section > :not([aria-hidden='true']),
+[data-scroll-fade-section] .summary-screen > footer > div {
+  opacity: var(--section-scroll-opacity, 1);
+  transition: opacity 120ms linear;
+  will-change: opacity;
+}
+
+.sticky-panel--pre-summary > section {
+  min-height: 100vh;
+}
+
+.sticky-panel--pre-summary {
+  min-height: 100vh;
+}
+
+.sticky-panel.sticky-panel--pre-summary > section > :not([aria-hidden='true']) {
+  transform: scale(var(--section-content-scale, 1)) !important;
+  transform-origin: center center;
+}
+
+.summary-screen {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+  background: transparent;
+}
+
+.summary-screen > section {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 100vh;
+  padding-top: clamp(1.5rem, 3vh, 2.5rem) !important;
+  padding-bottom: clamp(1.5rem, 3vh, 2.5rem) !important;
+}
+
+.summary-screen > section > :not([aria-hidden='true']) {
+  transform: scale(var(--section-content-scale, 1));
+  transform-origin: center center;
+}
+
+.summary-screen > footer {
+  flex: 0 0 auto;
+}
+
+.summary-screen > footer > div {
+  padding-top: 2rem;
+  padding-bottom: 1.5rem;
+}
+
+@media (max-width: 1800px) {
+  .final-cta-content {
+    transform: scale(0.9);
+    transform-origin: center center;
+  }
+
+  .sticky-panel > section {
+    --section-content-scale: 0.9;
+  }
+
+  .sticky-panel--summary {
+    position: relative;
+    top: auto;
+  }
+
+  .summary-screen {
+    --section-content-scale: 0.9;
+    height: auto;
+    min-height: calc(100vh - var(--sticky-offset, 0px));
+    overflow: visible;
+  }
+
+  .summary-screen > section {
+    flex: 0 0 auto;
+    min-height: auto;
+    justify-content: flex-start;
+    overflow: visible;
+    padding-top: 4rem !important;
+    padding-bottom: 3rem !important;
+  }
+
+  .summary-screen > footer > div {
+    transform: scale(var(--section-content-scale, 1));
+    transform-origin: center center;
+  }
+}
+
+.sticky-panel > section > :not([aria-hidden='true']) {
+  transform: translateY(var(--stack-content-shift, 0px)) scale(var(--section-content-scale, 1));
+  transform-origin: center center;
+}
+
+@media (max-width: 1180px) {
+  .sticky-panel > section {
+    --section-content-scale: 0.9;
+  }
+}
+
+.sticky-panel--light > section {
+  background: transparent !important;
+}
+
+[data-landing-scroll-root],
+[data-landing-scroll-root] section,
+.sticky-panel {
+  scroll-snap-align: none;
+  scroll-snap-stop: normal;
+}
+
+/* Hexagon clip — the numbered/iconed badges throughout the page. */
+.hex-clip {
+  clip-path: var(--hex);
+}
+
+/* Gentle floating/hover bob — hero bee mascot. */
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+.animate-float {
+  animation: floatY 3.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Running bee — a smooth, right-biased scamper in place (no hard snap-back).
+   The bee faces right and its legs already run in the GIF; this adds a small
+   eased forward-and-back bob (more travel on the right + a slight lean) so it
+   reads as scampering rightward, while easing both ways so the loop never
+   jumps. A pinned mascot can't run off-screen, so we keep it subtle. */
+@keyframes runX {
+  0%,
+  100% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(7px);
+  }
+}
+.hero-split-side {
+  opacity: 1;
+  will-change: opacity, transform;
+}
+
+.hero-split-left {
+  transform: translate3d(0, 0, 0);
+}
+
+.hero-split-right {
+  transform: translate3d(0, 0, 0);
+}
+
+@media (max-width: 767px) {
+  .stack-jump-nav {
+    display: none;
+  }
+
+  .sticky-flow::after {
+    height: 0;
+  }
+
+  .sticky-panel,
+  .sticky-panel--pre-summary,
+  .sticky-panel--summary {
+    position: relative;
+    top: auto;
+    min-height: auto;
+  }
+
+  .sticky-panel > section,
+  .sticky-panel--pre-summary > section,
+  .summary-screen > section {
+    min-height: 100svh;
+    height: auto;
+    overflow: visible;
+    justify-content: flex-start;
+    padding-top: max(2.75rem, env(safe-area-inset-top) + 2.25rem) !important;
+    padding-bottom: max(4rem, env(safe-area-inset-bottom) + 3rem) !important;
+  }
+
+  .summary-screen {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+  }
+
+  .summary-screen > footer > div {
+    transform: none;
+  }
+
+  .hero-split-left,
+  .hero-split-right {
+    transform: translate3d(0, 0, 0) !important;
+  }
+
+}
+
+.animate-run-x {
+  animation: runX 0.95s ease-in-out infinite;
+  will-change: transform;
+}
+
+.scroll-path-transition-overlay {
+  contain: paint;
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+/* Split-flap flip-word (final CTA "派你的 Agent 出去 [获客/挣钱/…]").
+   Two honey halves split at the center seam; on each tick the top half
+   of the current word folds down and the bottom half of the next word
+   folds up — a calendar / airport-board flip from the middle. */
+.flap {
+  position: relative;
+  display: inline-block;
+  perspective: 320px;
+  vertical-align: baseline;
+}
+.flap-sizer {
+  visibility: hidden;
+  display: block;
+  padding: 0.02em 0.24em;
+}
+.flap-half {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  background: var(--color-honey);
+  color: var(--color-ink);
+}
+.flap-half.top {
+  top: 0;
+  border-radius: 12px 12px 0 0;
+}
+.flap-half.bottom {
+  bottom: 0;
+  border-radius: 0 0 12px 12px;
+}
+.flap-glyph {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  padding: 0.02em 0.24em;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+}
+.flap-half.top .flap-glyph {
+  top: 0;
+}
+.flap-half.bottom .flap-glyph {
+  bottom: 0;
+}
+.flap-fold-down {
+  transform-origin: bottom;
+  backface-visibility: hidden;
+  animation: flapDown 0.5s ease-in-out forwards;
+  z-index: 2;
+}
+.flap-fold-up {
+  transform-origin: top;
+  backface-visibility: hidden;
+  /* `both` (was `forwards`) holds the rotateX(90deg) start state through the
+     0.28s delay. With `forwards` the flap rested flat and showed the NEXT word
+     on the bottom half before the top finished folding — the lower line looked
+     like it changed first ("下面的字先变了") with a stray seam/strikethrough. */
+  animation: flapUp 0.5s ease-in-out forwards;
+  z-index: 2;
+}
+@keyframes flapDown {
+  0% { transform: scaleY(1); }
+  50%, 100% { transform: scaleY(0); }
+}
+@keyframes flapUp {
+  0%, 50% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+.flap-seam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-1px);
+  background: rgba(0, 0, 0, 0.18);
+  z-index: 3;
+}
+
+/* Connector logo tiles — paired brand marks lifted from the design
+   (see components/sections/connectorLogos.ts), rendered as raw SVG. */
+.conn-logos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.conn-logos .lt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  border: 1px solid var(--color-line);
+  background: #f6f4ee;
+}
+.conn-logos .lt svg {
+  width: 22px;
+  height: 22px;
+}
+
+.conn-logos .lt img {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+[data-stack-motion] [data-motion='header'] > *,
+[data-stack-motion] [data-motion='group'] > *,
+[data-stack-motion] [data-motion='split'] > * {
+  will-change: opacity, transform;
+  transition: none;
+}
